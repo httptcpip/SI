@@ -3,23 +3,28 @@ import sys
 import time
 import pygame
 
+COUNT = 0
 FT = 1000  # 刷新间隔（毫秒）
 PopL = 500  # number of the peoples (init)
-
-
-def preload():
-    global s, i, r, bkg
-    s = pygame.image.load("resource/S.png")
-    i = pygame.image.load("resource/I.png")
-    r = pygame.image.load("resource/R.png")
-    bkg = pygame.image.load("resource/bkg.png")
+screen: pygame.Surface
+per_i = 0
+per_s = 0
+per_r = 0
+person_list = []
+city_list = []
+s = pygame.image.load("resource/S.png")
+i = pygame.image.load("resource/I.png")
+r = pygame.image.load("resource/R.png")
+bkg = pygame.image.load("resource/bkg.png")
+bk = bkg
+have_input_g = True
 
 
 class Person(object):
     # Fixed args
-    IA = 20  # px;infect area
-    IP = 1  # infect possibility
-    ItRT = 10  # s;infect-to-recovered-time
+    IA = 40  # px;infect area
+    IP = 0.25  # infect possibility
+    ItRT = 14  # s;infect-to-recovered-time
     LT = 100  # iter;live time
     DR = 0.0118  # death rate
 
@@ -50,7 +55,7 @@ class Person(object):
 
     def recovered(self):
         if self.infected_time is not None:
-            if COUNT - self.infected_time > self.ItRT and random.randint(0, 10000) in range(int(self.DR * 10000)):
+            if not (COUNT - self.infected_time > self.ItRT and random.randint(0, 10000) in range(int(self.DR * 10000))):
                 self.state = "R"
                 self.icon = self.r
                 bkg.blit(self.icon, self.pos)
@@ -69,7 +74,7 @@ class Person(object):
         pos_new.append(self.pos[1] + 10)
         self.icon.fill((0, 0, 0))
         pygame.display.flip()
-        print("{} is died".format(self))
+        print("{} is died".format(self) if have_input_g else "", end="\n" if have_input_g else "")
         del self
         pygame.display.flip()
 
@@ -90,75 +95,72 @@ class City:
         self.tar_rt = tarvel_rt
 
 
-class main():
-    def __init__(self):
-        preload()  # preload resources
+def Main(have_input=True):
+    # preload()  # preload resources
 
-        global COUNT
-        self.COUNT = 0
-        # pygame
-        pygame.init()
-        size = (640, 640)
-        global screen, bk
-        screen = pygame.display.set_mode(size)
+    global COUNT, screen, per_s, per_r, per_i, COUNT, FT, PopL, person_list, city_list, s, i, r, bk, have_input_g
 
-        # record prog-data
-        self.start_time = int(round(time.time() * 1000))  # 毫秒数时间戳 round-四舍五入
+    # pygame
+    pygame.init()
+    size = (640, 640)
+    have_input_g = have_input
 
-        # make people
-        self.city_list = []
-        self.person_list = []
-        init_infect_rt_by_per = 100
-        sys.stderr.write("START:CONSTRUCTING\n")
-        for ci in range(City.max_city):
-            self.city_list.append(City(PopL, 0.05))
-            for per in range(self.city_list[ci].max_pr):
-                self.person_list.append(Person("I" if per % init_infect_rt_by_per == 0 else "S"))
-                print("here is {}".format(self.person_list[per]))
+    screen = pygame.display.set_mode(size)
 
-        # Running
-        sys.stderr.write("START:ITER\n")
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return
+    # record prog-data
+    start_time = int(round(time.time() * 1000))  # 毫秒数时间戳 round-四舍五入
 
-            self.per_i = 0
-            self.per_s = 0
-            self.per_r = 0
-            if (int(round(time.time() * 1000)) - self.start_time) >= FT:
-                self.start_time += FT
-                for per in self.person_list:
-                    per.recovered()
-                    if time.time() - per.birth_time > per.LT:
-                        self.person_list.remove(per)
-                    print(per)
-                    if per.state == "I":
-                        self.per_i += 1
-                    elif per.state == "S":
-                        self.per_s += 1
-                    elif per.state == "R":
-                        self.per_r += 1
-                    # screen.fill((0, 0, 0))
-                    pygame.display.flip()
-                    per.move_randomly()
+    # make people
+    city_list = []
+    init_infect_rt_by_per = 100
+    sys.stderr.write("START:CONSTRUCTING\n")
+    for ci in range(City.max_city):
+        city_list.append(City(PopL, 0.05))
+        for per in range(city_list[ci].max_pr):
+            person_list.append(Person("I" if per % init_infect_rt_by_per == 0 else "S"))
+            print("here is {}".format(person_list[per]))
 
-                sys.stderr.write(
-                    "START:ITER {} ,{} INFECTED ,{} INFECTABLE ,{} RECOVERED\n".format(COUNT, self.per_i, self.per_s,
-                                                                                       self.per_r))
-                sys.stderr.flush()
-                COUNT += 1
+    # Running
+    sys.stderr.write("START:ITER\n")
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
 
-            for per in self.person_list:
+        per_i = 0
+        per_s = 0
+        per_r = 0
+        if (int(round(time.time() * 1000)) - start_time) >= FT:
+            start_time += FT
+            for per in person_list:
+                per.recovered()
+                if time.time() - per.birth_time > per.LT:
+                    person_list.remove(per)
+                print(per if have_input else "", end="\n" if have_input else "")
                 if per.state == "I":
-                    for per_2 in self.person_list:
-                        if (per.pos[0] - per.IA < per_2.pos[0] < per.pos[0] + per.IA) and (
-                                per.pos[1] - per.IA < per_2.pos[1] < per.pos[1] + per.IA) and (
-                                per.state == "I" and per_2.state == "S"):
-                            if per.state == "I" and random.randint(0, 100) in range(per_2.IP):
-                                per_2.by_infect()
+                    per_i += 1
+                elif per.state == "S":
+                    per_s += 1
+                elif per.state == "R":
+                    per_r += 1
+                # screen.fill((0, 0, 0))
+                pygame.display.flip()
+                per.move_randomly()
 
-            pygame.display.update()
+            sys.stderr.write(
+                "START:ITER {} ,{} INFECTED ,{} INFECTABLE ,{} RECOVERED\n".format(COUNT, per_i, per_s,
+                                                                                   per_r))
+            sys.stderr.flush()
+            COUNT += 1
 
+        for per in person_list:
+            if per.state == "I":
+                for per_2 in person_list:
+                    if (per.pos[0] - per.IA < per_2.pos[0] < per.pos[0] + per.IA) and (
+                            per.pos[1] - per.IA < per_2.pos[1] < per.pos[1] + per.IA) and (
+                            per.state == "I" and per_2.state == "S"):
+                        if per.state == "I" and random.randint(0, 100) in range(int(per_2.IP * 100)):
+                            per_2.by_infect()
 
+        pygame.display.update()
