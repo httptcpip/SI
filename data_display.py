@@ -21,7 +21,7 @@ class InfmationForm(QtWidgets.QMainWindow, Ui_MainWindow):
         pg.setConfigOption('foreground', 'k')
 
     def startTheSim(self):
-        self.Sim = Thread(target=Main)
+        self.Sim = Thread(target=Main,args=(False,))
         self.Sim.start()
         start_time = time.time()
         while per_s + per_i + per_s > 0 and (int(round(time.time() * 1000)) - start_time) >= 1000:
