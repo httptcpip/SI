@@ -118,7 +118,7 @@ def Main(have_input=True):
         city_list.append(City(PopL, 0.05))
         for per in range(city_list[ci].max_pr):
             person_list.append(Person("I" if per % init_infect_rt_by_per == 0 else "S"))
-            print("here is {}".format(person_list[per]))
+            print("here is {}".format(person_list[per]) if have_input else "",end="\n" if have_input else "")
 
     # Running
     sys.stderr.write("START:ITER\n")
