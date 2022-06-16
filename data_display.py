@@ -16,18 +16,21 @@ class InfmationForm(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Sim = None
         self.rec = np.array(list(range(30)))  # type:np.ndarray
         self.rec.resize((10, 3))
+        self.setWindowTitle("SIR model controller")
         pg.setConfigOptions(leftButtonPan=False)
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
 
     def startTheSim(self):
-        self.Sim = Thread(target=Main,args=(False,))
+        self.Sim = Thread(target=Main, args=(False,))
         self.Sim.start()
         start_time = time.time()
-        while per_s + per_i + per_s > 0 and (int(round(time.time() * 1000)) - start_time) >= 1000:
-            for i, row in enumerate(self.rec):
-                self.rec[i] = self.rec[i + 1] if i < self.rec.shape[1] - 2 else np.array([per_s, per_i, per_r])
-                print(self.rec)
+        print("START THE RECORD...")
+        while True:
+            if per_s + per_i + per_s > 0 and (int(round(time.time() * 1000)) - start_time) >= 1000:
+                for i, row in enumerate(self.rec):
+                    self.rec[i] = self.rec[i + 1] if i < self.rec.shape[1] - 2 else np.array([per_s, per_i, per_r])
+                    print(self.rec)
 
 
 def real_main():

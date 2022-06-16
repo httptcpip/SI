@@ -59,24 +59,11 @@ class Person(object):
                 self.state = "R"
                 self.icon = self.r
                 bkg.blit(self.icon, self.pos)
-            else:
-                if COUNT - self.infected_time > self.ItRT:
-                    self.die()
 
     def by_infect(self):
         self.state = "I"
         self.infected_time = COUNT
         self.icon = i
-
-    def die(self):
-        pos_new = list(self.pos)
-        pos_new.append(self.pos[0] + 10)
-        pos_new.append(self.pos[1] + 10)
-        self.icon.fill((0, 0, 0))
-        pygame.display.flip()
-        print("{} is died".format(self) if have_input_g else "", end="\n" if have_input_g else "")
-        del self
-        pygame.display.flip()
 
     def __str__(self):
         return "Person {} with state {} stand at {} brith in {}".format(id(self), self.state, self.pos, self.birth_time)
@@ -118,7 +105,7 @@ def Main(have_input=True):
         city_list.append(City(PopL, 0.05))
         for per in range(city_list[ci].max_pr):
             person_list.append(Person("I" if per % init_infect_rt_by_per == 0 else "S"))
-            print("here is {}".format(person_list[per]) if have_input else "",end="\n" if have_input else "")
+            print("here is {}".format(person_list[per]) if have_input else "", end="\n" if have_input else "")
 
     # Running
     sys.stderr.write("START:ITER\n")
