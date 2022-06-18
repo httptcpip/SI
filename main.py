@@ -16,6 +16,7 @@ s = pygame.image.load("resource/S.png")
 i = pygame.image.load("resource/I.png")
 r = pygame.image.load("resource/R.png")
 bkg = pygame.image.load("resource/bkg.png")
+city = pygame.image.load("resource/city.png")
 bk = bkg
 have_input_g = True
 
@@ -28,9 +29,10 @@ class Person(object):
     LT = 100  # iter;live time
     DR = 0.0118  # death rate
 
-    def __init__(self, state="S"):
+    def __init__(self, city, state="S"):
         self.age = random.randint(1, 100)
         self.state = state
+        self.city = city
         self.s = s
         self.i = i
         self.r = r
@@ -43,6 +45,9 @@ class Person(object):
 
     def move_randomly(self):
         pos_movement = random.sample(list(range(10, 21, 10)) + list(range(-20, -9, 10)), 2)
+        self.__core__(pos_movement)
+
+    def __core__(self, pos_movement):
         screen.blit(bkg, self.pos)
         self.pos[0] += pos_movement[0]
         self.pos[1] += pos_movement[1]
@@ -52,6 +57,24 @@ class Person(object):
         else:
             screen.blit(self.icon, (320, 320))
         pygame.display.update()
+
+    def move_randomly_c(self):
+        demo_pos = self.pos
+        xy = self.city.from_xy
+        xy_end = self.city.to_xy
+
+        def inside():
+            pos_movement = random.sample(list(range(10, 21, 10)) + list(range(-20, -9, 10)), 2)
+            demo_pos[0] += pos_movement[0]
+            demo_pos[1] += pos_movement[1]
+            if xy[0] < demo_pos[0] < xy_end[0] and xy[1] < demo_pos[1] < xy_end[1]:
+                self.__core__(pos_movement)
+                return True
+            else:
+                return False
+
+        while not inside():
+            pass
 
     def recovered(self):
         if self.infected_time is not None:
@@ -77,9 +100,14 @@ class Market:
 class City:
     max_city = 1  # Max city number
 
-    def __init__(self, max_per, tarvel_rt):
+    def __init__(self, fromconn, to, max_per, tarvel_rt):
         self.max_pr = max_per
         self.tar_rt = tarvel_rt
+        self.from_xy = fromconn
+        self.to_xy = to
+
+    def doCtrl(self):
+        pygame.Surface.blit(screen, city, self.from_xy)
 
 
 def Main(have_input=True):
@@ -104,7 +132,7 @@ def Main(have_input=True):
     for ci in range(City.max_city):
         city_list.append(City(PopL, 0.05))
         for per in range(city_list[ci].max_pr):
-            person_list.append(Person("I" if per % init_infect_rt_by_per == 0 else "S"))
+            person_list.append(Person(city_list[ci], "I" if per % init_infect_rt_by_per == 0 else "S"))
             print("here is {}".format(person_list[per]) if have_input else "", end="\n" if have_input else "")
 
     # Running
