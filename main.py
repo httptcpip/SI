@@ -75,6 +75,7 @@ class Person(object):
 
         while not inside():
             pass
+        pygame.display.update()
 
     def recovered(self):
         if self.infected_time is not None:
@@ -130,7 +131,9 @@ def Main(have_input=True):
     init_infect_rt_by_per = 100
     sys.stderr.write("START:CONSTRUCTING\n")
     for ci in range(City.max_city):
-        city_list.append(City(PopL, 0.05))
+        x = 100 * (ci // 6)
+        y = 100 * (ci % 6)
+        city_list.append(City((x, y), (x + 100, y + 100), PopL, 0.05))
         for per in range(city_list[ci].max_pr):
             person_list.append(Person(city_list[ci], "I" if per % init_infect_rt_by_per == 0 else "S"))
             print("here is {}".format(person_list[per]) if have_input else "", end="\n" if have_input else "")
